@@ -30,6 +30,8 @@ checksum = "ed570934406eb16438a4e976b1b4500774099c13b8cb96eec99f620f05090ddf"
 name = "blog_os"
 version = "0.1.0"
 dependencies = [
+ "bit_field",
+ "bitflags 2.4.2",
  "bootloader",
  "lazy_static",
  "log",

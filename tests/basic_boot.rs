@@ -5,7 +5,6 @@
 #![reexport_test_harness_main = "test_main"]
 
 use blog_os::println;
-use blog_os::print;
 use core::panic::PanicInfo;
 
 #[no_mangle]
