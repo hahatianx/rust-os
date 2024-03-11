@@ -1,17 +1,17 @@
 
-mod idt;
+pub mod idt;
 mod page_fault;
 
 use core::arch::asm;
 use lazy_static::lazy_static;
-use idt::Idt;
-use crate::interrupts::idt::IdtIndex;
+use crate::interrupts::idt::{Idt, IdtIndex};
 use crate::interrupts::page_fault::PageFaultErrorCode;
-use crate::{println, serial_print};
+use crate::gdt;
+use crate::println;
 
 #[derive(Debug)]
 #[repr(C)]
-struct ExceptionStackFrame {
+pub struct ExceptionStackFrame {
     instruction_pointer: u64,
     code_segment: u64,
     cpu_flags: u64,
@@ -20,6 +20,7 @@ struct ExceptionStackFrame {
 }
 
 
+#[macro_export]
 macro_rules! handler {
     ($name: ident) => {{
         #[naked]
@@ -62,6 +63,7 @@ macro_rules! handler {
     }};
 }
 
+#[macro_export]
 macro_rules! handler_with_error_code {
     ($name: ident) => {{
         #[naked]
@@ -118,6 +120,8 @@ macro_rules! handler_with_error_code {
 lazy_static! {
     static ref IDT: Idt = {
         let mut idt = Idt::new();
+        idt.set_handler(IdtIndex::DoubleFault, handler_with_error_code!(double_fault_handler))
+            .set_stack_index(gdt::ISTIndex::DoubleFaultISTIndex as u16);
         idt.set_handler(IdtIndex::DivisionError, handler!(divide_by_zero_exception));
         idt.set_handler(IdtIndex::Breakpoint, handler!(breakpoint_exception));
         idt.set_handler(IdtIndex::InvalidOpcode, handler!(invalid_opcode_handler));
@@ -135,7 +139,7 @@ extern "C" fn breakpoint_exception(stack_frame: &ExceptionStackFrame) {
 }
 
 extern "C" fn divide_by_zero_exception(stack_frame: &ExceptionStackFrame) {
-    serial_print!("\nEXCEPTION: DIVIDE BY ZERO\n{:#?}", stack_frame);
+    println!("\nEXCEPTION: DIVIDE BY ZERO\n{:#?}", stack_frame);
 }
 
 extern "C" fn invalid_opcode_handler(stack_frame: &ExceptionStackFrame) {
@@ -145,11 +149,15 @@ extern "C" fn invalid_opcode_handler(stack_frame: &ExceptionStackFrame) {
 
 extern "C" fn page_fault_handler(stack_frame: &ExceptionStackFrame, error_code: u64) {
     use x86_64::registers::control;
-    serial_print!("\nEXCEPTION: PAGE FAULT while accessing {:#x}\
+    println!("\nEXCEPTION: PAGE FAULT while accessing {:#x}\
         \nerror code: {:?}\n{:#?}",
         control::Cr2::read().unwrap(),
         PageFaultErrorCode::from_bits(error_code).unwrap(),
         stack_frame);
+}
+
+extern "C" fn double_fault_handler(stack_frame: &ExceptionStackFrame, _error_code: u64) -> ! {
+    panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
 }
 
 #[cfg(test)]

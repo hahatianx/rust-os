@@ -128,8 +128,12 @@ impl EntryOptions {
         self
     }
 
+    /* trick here.
+     in GDT, the array indices start at 0, [0, 6]
+        However, the IDT options should be [1, 7]  0 is reserved for default
+     */
     pub fn set_stack_index(&mut self, index: u16) -> &mut Self {
-        self.0.set_bits(0..3, index & 0b111);
+        self.0.set_bits(0..3, (index + 1) & 0b111);
         self
     }
 }
