@@ -4,7 +4,6 @@
 #![feature(naked_functions)]
 #![allow(internal_features)]
 #![feature(core_intrinsics)]
-#![feature(abi_x86_interrupt)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
@@ -15,11 +14,23 @@ pub mod gdt;
 
 extern crate bit_field;
 
+use core::arch::asm;
 use core::panic::PanicInfo;
+
+pub fn halt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
 
 pub fn init() {
     gdt::init();
     interrupts::init_idt();
+    unsafe {
+        interrupts::hardware::PICS.lock().initialize();
+        // enable interrupts
+        asm!( "sti", options(preserves_flags, nostack));
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,7 +68,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("[failed]\n");
     serial_println!("Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    halt_loop();
 }
 
 pub fn test_runner(tests: &[&dyn Testable]) {
@@ -74,7 +85,7 @@ pub fn test_runner(tests: &[&dyn Testable]) {
 pub extern "C" fn _start() -> ! {
     init();
     test_main();
-    loop{};
+    halt_loop();
 }
 
 #[cfg(test)]

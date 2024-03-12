@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 #![feature(naked_functions)]
-#![feature(abi_x86_interrupt)]
 
 use core::panic::PanicInfo;
 use core::arch::asm;
@@ -9,7 +8,7 @@ use lazy_static::lazy_static;
 
 use blog_os::{exit_qemu, handler_with_error_code, QemuExitCode, serial_print, serial_println};
 use blog_os::interrupts::{ExceptionStackFrame};
-use blog_os::interrupts::idt::{IdtIndex, Idt};
+use blog_os::interrupts::idt::{IdtIndex, Idt, CpuExceptionIndex};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -37,7 +36,8 @@ fn panic(info: &PanicInfo) -> ! {
 lazy_static! {
     static ref TEST_IDT: Idt = {
         let mut idt = Idt::new();
-        idt.set_handler(IdtIndex::DoubleFault, handler_with_error_code!(test_double_fault_handler))
+        idt.set_handler(IdtIndex::CpuException(CpuExceptionIndex::DoubleFault),
+                handler_with_error_code!(test_double_fault_handler))
             .set_stack_index(blog_os::gdt::ISTIndex::DoubleFaultISTIndex as u16);
         idt
     };

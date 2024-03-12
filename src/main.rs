@@ -8,6 +8,7 @@ mod vga_buffer;
 mod serial;
 
 use core::panic::PanicInfo;
+use blog_os::halt_loop;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -19,14 +20,14 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
-    loop {}
+    halt_loop();
 }
 
 #[cfg(not(test))]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    println!("{}", _info);
-    loop {}
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    halt_loop();
 }
 
 #[cfg(test)]

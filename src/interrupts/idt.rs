@@ -4,12 +4,14 @@ use x86_64::structures::gdt::SegmentSelector;
 use x86_64::{PrivilegeLevel, VirtAddr};
 
 use bit_field::BitField;
+use crate::interrupts::hardware::InterruptIndex;
 
 type HandlerWrapper = extern "C" fn() -> !;
 
 #[derive(Debug, Clone, Copy)]
 #[allow(dead_code)]
-pub enum IdtIndex {
+#[repr(u8)]
+pub enum CpuExceptionIndex {
     DivisionError          = 0x0,
     Debug                  = 0x1,
     NonMaskableInterrupt   = 0x2,
@@ -28,18 +30,46 @@ pub enum IdtIndex {
     Reserved               = 0xf,
 }
 
+impl CpuExceptionIndex {
+    pub fn as_u8(self) -> u8 {
+        self as u8
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
+#[repr(u8)]
+pub enum IdtIndex {
+    CpuException(CpuExceptionIndex),
+    Interrupt(InterruptIndex),
+}
+
+impl IdtIndex {
+    pub fn as_u8(self) -> u8 {
+        match self {
+            IdtIndex::CpuException(cpu_exception_index) => cpu_exception_index.as_u8(),
+            IdtIndex::Interrupt(interrupt_index) => interrupt_index.as_u8(),
+        }
+    }
+
+    pub fn as_usize(self) -> usize {
+        usize::from(self.as_u8())
+    }
+
+}
+
 #[derive(Debug)]
-pub struct Idt([Entry; 16]);
+pub struct Idt([Entry; 64]);
 
 impl Idt {
     pub fn new() -> Self {
-        Idt([Entry::missing(); 16])
+        Idt([Entry::missing(); 64])
     }
 
     pub fn set_handler(&mut self, entry: IdtIndex, handler_func: HandlerWrapper) -> &mut EntryOptions {
-        self.0[entry as usize] = Entry::new(segmentation::CS::get_reg(), handler_func);
+        self.0[entry.as_usize()] = Entry::new(segmentation::CS::get_reg(), handler_func);
         unsafe {
-            let raw_ptr = core::ptr::addr_of_mut!(self.0[entry as usize].options);
+            let raw_ptr = core::ptr::addr_of_mut!(self.0[entry.as_usize()].options);
             &mut *raw_ptr
         }
     }
@@ -136,4 +166,34 @@ impl EntryOptions {
         self.0.set_bits(0..3, (index + 1) & 0b111);
         self
     }
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+    #[test_case]
+    pub fn test_idt_index_value() {
+
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::DivisionError).as_u8(), 0x0);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::Debug).as_u8(), 0x1);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::NonMaskableInterrupt).as_u8(), 0x2);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::Breakpoint).as_u8(), 0x3);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::Overflow).as_u8(), 0x4);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::BoundRangeExceeded).as_u8(), 0x5);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::InvalidOpcode).as_u8(), 0x6);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::DeviceNotAvailable).as_u8(), 0x7);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::DoubleFault).as_u8(), 0x8);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::CoprocessorSegOverrun).as_u8(), 0x9);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::InvalidTSS).as_u8(), 0xa);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::SegmentNotPresent).as_u8(), 0xb);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::StackSegmentFault).as_u8(), 0xc);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::GeneralProtectionFault).as_u8(), 0xd);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::PageFault).as_u8(), 0xe);
+        assert_eq!(IdtIndex::CpuException(CpuExceptionIndex::Reserved).as_u8(), 0xf);
+
+        // interrupts
+        assert_eq!(IdtIndex::Interrupt(InterruptIndex::Timer).as_u8(), 32);
+    }
+
 }

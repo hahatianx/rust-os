@@ -29,6 +29,8 @@ uart_16550 = "0.3.0"
 log = "0.4.21"
 bit_field = "0.10.2"
 bitflags = "2.4.2"
+pic8259 = "0.11.0"
+pc-keyboard = "0.7.0"
 
 [[test]]
 name = "stack_overflow"
