@@ -35,6 +35,7 @@ dependencies = [
  "bootloader",
  "lazy_static",
  "log",
+ "pic8259",
  "spin 0.9.8",
  "uart_16550",
  "volatile 0.2.7",
@@ -71,6 +72,15 @@ name = "log"
 version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
+
+[[package]]
+name = "pic8259"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62d9a86c292b165f757e47e7fd66855def189b2564609bc4203727b27c33db22"
+dependencies = [
+ "x86_64",
+]
 
 [[package]]
 name = "raw-cpuid"

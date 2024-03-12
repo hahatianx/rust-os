@@ -1,9 +1,11 @@
 
 pub mod idt;
+pub mod hardware;
 mod page_fault;
 
 use core::arch::asm;
 use lazy_static::lazy_static;
+
 use crate::interrupts::idt::{Idt, IdtIndex};
 use crate::interrupts::page_fault::PageFaultErrorCode;
 use crate::gdt;
@@ -167,7 +169,7 @@ mod test {
         x86_64::instructions::interrupts::int3();
     }
 
-    // The following tests are commented out on purpose
+    // The following two tests are commented out on purpose
     // The instruction fails the CPU cannot get bypassed, causing the kernel into a dead loop
 
     #[test_case]

@@ -20,6 +20,7 @@ use core::panic::PanicInfo;
 pub fn init() {
     gdt::init();
     interrupts::init_idt();
+    unsafe { interrupts::hardware::PICS.lock().initialize() };
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
