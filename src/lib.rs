@@ -10,12 +10,41 @@
 pub mod serial;
 pub mod vga_buffer;
 pub mod interrupts;
+pub mod virtual_memory;
 pub mod gdt;
 
 extern crate bit_field;
 
 use core::arch::asm;
 use core::panic::PanicInfo;
+
+/** main **/
+#[no_mangle]
+pub extern fn _start() -> ! {
+
+    println!("Hello World{}", "!");
+
+    init();
+
+    #[cfg(test)]
+    test_main();
+
+    halt_loop();
+}
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    halt_loop();
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    crate::test_panic_handler(_info);
+}
+/** main **/
 
 pub fn halt_loop() -> ! {
     loop {

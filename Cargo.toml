@@ -3,12 +3,15 @@ name = "blog_os"
 version = "0.1.0"
 edition = "2021"
 
-[package.metadata.bootimage]
-test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio"]
-test-success-exit-code = 33
-test-timeout = 300
+# [package.metadata.bootimage]
+# test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio"]
+# test-success-exit-code = 33
+# test-timeout = 300
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["staticlib"]
 
 [profile.dev]
 # panic = "abort"
@@ -21,7 +24,7 @@ version = "1.0"
 features = ["spin_no_std"]
 
 [dependencies]
-bootloader = "0.9"
+# bootloader = "0.9"
 volatile = "0.2.6"
 spin = "0.9.8"
 x86_64 = "0.15.0"

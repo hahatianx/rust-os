@@ -32,7 +32,6 @@ version = "0.1.0"
 dependencies = [
  "bit_field",
  "bitflags 2.4.2",
- "bootloader",
  "lazy_static",
  "log",
  "pc-keyboard",
@@ -42,12 +41,6 @@ dependencies = [
  "volatile 0.2.7",
  "x86_64",
 ]
-
-[[package]]
-name = "bootloader"
-version = "0.9.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa1b8265c3a76185da6a3c43a86ce4fc669663b92e7d044fb62840a6147b491b"
 
 [[package]]
 name = "lazy_static"
